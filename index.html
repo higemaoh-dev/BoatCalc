@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>船上精算＆航海シミュレーター</title>
+<style>
+:root {--primary-color: #0b2f61;--secondary-color: #1a73e8;--accent-color: #e67e22;--bg-color: #f0f4f8;--card-bg: #ffffff;--text-main: #2c3e50;--text-muted: #7f8c8d;}
+body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;line-height: 1.5;max-width: 640px;margin: 0 auto;padding: 15px;background-color: var(--bg-color);color: var(--text-main);}
+h1 {text-align: center;color: var(--primary-color);font-size: 1.6em;margin-bottom: 20px;font-weight: 800;letter-spacing: 0.05em;}
+h2 {color: var(--primary-color);font-size: 1.05em;margin: 0 0 12px 0;padding-bottom: 6px;border-bottom: 2px solid #e1e8ed;font-weight: 700;}
+.card {background: var(--card-bg);padding: 18px;margin-bottom: 16px;border-radius: 12px;box-shadow: 0 4px 12px rgba(11, 47, 97, 0.06);}
+label {display: block;font-weight: 700;margin-bottom: 6px;font-size: 0.85em;color: var(--primary-color);}
+.btn-group {display: flex;gap: 8px;flex-wrap: wrap;margin-bottom: 14px;}
+button {border: none;padding: 10px 14px;border-radius: 8px;cursor: pointer;font-weight: 700;font-size: 0.88em;transition: all 0.2s ease;box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+button:active {transform: translateY(1px);box-shadow: none;}
+.btn-pax {background-color: #eef5fc;color: var(--secondary-color);border: 1px solid #d2e3fc;flex: 1;min-width: 50px;}
+.btn-pax.active {background-color: var(--secondary-color);color: white;border-color: var(--secondary-color);}
+.btn-plan {background-color: #f4f6f9;color: var(--text-main);border: 1px solid #e2e8f0;}
+.btn-plan:hover {background-color: #e2e8f0;}
+.btn-reset {background-color: #95a5a6;color: white;margin-left: auto;}
+.form-grid {display: grid;grid-template-columns: 1fr 1fr;gap: 12px;}
+.form-group {margin-bottom: 4px;}
+input[type="number"] {width: 100%;padding: 10px 12px;box-sizing: border-box;border: 1px solid #ccd6dd;border-radius: 8px;font-size: 1em;color: var(--text-main);background-color: #fcfdfe;transition: border-color 0.2s;}
+input[type="number"]:focus {outline: none;border-color: var(--secondary-color);background-color: #ffffff;}
+table {width: 100%;border-collapse: separate;border-spacing: 0;margin-top: 5px;}
+th, td {padding: 12px 10px;font-size: 0.95em;}
+th {background-color: #f8fafc;color: var(--primary-color);font-weight: 700;text-align: left;border-bottom: 2px solid #e2e8f0;}
+td {text-align: right;border-bottom: 1px solid #edf2f7;color: var(--text-main);}
+.total-row td {font-weight: 700;background-color: #f8fafc;border-top: 1px solid #cbd5e0;}
+.result-row {background-color: #f0f7ff !important;}
+.result-row td {border-bottom: none;padding: 16px 10px;}
+.highlight {font-size: 1.5em;color: var(--accent-color);font-weight: 800;}
+</style>
+</head>
+<body>
+<h1>船上精算＆航海シミュレーター</h1>
+<div class="card">
+<h2>クイック選択</h2>
+<label>① 乗船人数 (最大6名):</label>
+<div class="btn-group">
+<button type="button" class="btn-pax" id="btn-pax-1" onclick="loadPassengers(1)">1人</button>
+<button type="button" class="btn-pax" id="btn-pax-2" onclick="loadPassengers(2)">2人</button>
+<button type="button" class="btn-pax" id="btn-pax-3" onclick="loadPassengers(3)">3人</button>
+<button type="button" class="btn-pax" id="btn-pax-4" onclick="loadPassengers(4)">4人</button>
+<button type="button" class="btn-pax" id="btn-pax-5" onclick="loadPassengers(5)">5人</button>
+<button type="button" class="btn-pax" id="btn-pax-6" onclick="loadPassengers(6)">6人</button>
+</div>
+<label style="margin-top: 14px;">② 目的地（10%安全マージン込）:</label>
+<div class="btn-group">
+<button type="button" class="btn-plan" onclick="loadPlan(17.6)">瀬の海</button>
+<button type="button" class="btn-plan" onclick="loadPlan(44.0)">三浦</button>
+<button type="button" class="btn-plan" onclick="loadPlan(48.4)">初島</button>
+<button type="button" class="btn-plan" onclick="loadPlan(57.2)">伊東</button>
+<button type="button" class="btn-plan" onclick="loadPlan(88.0)">大島</button>
+<button type="button" class="btn-plan" onclick="loadPlan(110.0)">下田</button>
+</div>
+<div class="btn-group" style="margin-top: 14px; margin-bottom: 0;">
+<button type="button" class="btn-reset" onclick="resetToStandard()">数値を初期化</button>
+</div>
+</div>
+
+<div class="card">
+<h2>条件・実績データ（直接調整可）</h2>
+<div class="form-grid">
+<div class="form-group"><label for="passengers">乗船人数 (1〜6名):</label><input type="number" id="passengers" value="3" min="1" max="6"></div>
+<div class="form-group"><label for="distance">航行距離 (nm):</label><input type="number" id="distance" value="44.0" min="0" step="0.1"></div>
+<div class="form-group"><label for="fuel_price">燃料単価 (円/L):</label><input type="number" id="fuel_price" value="150" min="0"></div>
+<div class="form-group"><label for="dock_fee">施設利用料（上下架等）(円):</label><input type="number" id="dock_fee" value="7700" min="0"></div>
+<div class="form-group"><label for="stay_dock_fee">旅先での係留代 (円):</label><input type="number" id="stay_dock_fee" value="0" min="0"></div>
+<div class="form-group"><label for="bait_fee">エサ代 総額 (円):</label><input type="number" id="bait_fee" value="0" min="0"></div>
+<div class="form-group"><label for="ice_fee">氷代 総額 (円):</label><input type="number" id="ice_fee" value="0" min="0"></div>
+</div>
+</div>
+
+<div class="card" style="padding: 10px 18px;">
+<h2>算定結果</h2>
+<table>
+<thead><tr><th style="width: 55%;">内訳項目</th><th style="text-align: right;">金額 / 詳細</th></tr></thead>
+<tbody>
+<tr><td>燃料代</td><td id="res-fuel">¥0</td></tr>
+<tr><td>施設利用料（上下架等）</td><td id="res-dock">¥0</td></tr>
+<tr><td>旅先係留代</td><td id="res-stay-dock">¥0</td></tr>
+<tr><td>エサ代・氷代 合計</td><td id="res-supplies">¥0</td></tr>
+<tr class="total-row"><td>総経費</td><td id="res-total">¥0</td></tr>
+<tr class="total-row result-row"><td style="color: var(--primary-color);">1人あたりの徴収額</td><td id="res-per-person" class="highlight">¥0</td></tr>
+</tbody>
+</table>
+</div>
+
+<script>
+function getStandardFuelRate(p){const b=1.15,i=0.0625;return p<=1?b-i:b+(p-2)*i;}
+function updatePaxButtonUi(p){for(let i=1;i<=6;i++){const btn=document.getElementById(`btn-pax-${i}`);if(btn){if(i===p)btn.classList.add('active');else btn.classList.remove('active');}}}
+function resetToStandard(){document.getElementById('passengers').value=3;document.getElementById('distance').value=44.0;document.getElementById('fuel_price').value=150;document.getElementById('dock_fee').value=7700;document.getElementById('stay_dock_fee').value=0;document.getElementById('bait_fee').value=0;document.getElementById('ice_fee').value=0;updatePaxButtonUi(3);calculateCost();}
+function loadPassengers(p){document.getElementById('passengers').value=p;updatePaxButtonUi(p);calculateCost();}
+function loadPlan(d){document.getElementById('distance').value=d;calculateCost();}
+function calculateCost(){let p=parseInt(document.getElementById('passengers').value)||1;if(p>6)p=6;if(p<1)p=1;const d=parseFloat(document.getElementById('distance').value)||0,fp=parseFloat(document.getElementById('fuel_price').value)||0,df=parseFloat(document.getElementById('dock_fee').value)||0,sdf=parseFloat(document.getElementById('stay_dock_fee').value)||0,bf=parseFloat(document.getElementById('bait_fee').value)||0,if_fee=parseFloat(document.getElementById('ice_fee').value)||0;updatePaxButtonUi(p);const fr=getStandardFuelRate(p),fc=d*fr,fc_round=Math.round(fc*fp),sc=bf+if_fee,tc=fc_round+df+sdf+sc,pp=Math.ceil(tc/p);document.getElementById('res-fuel').innerText="¥"+fc_round.toLocaleString();document.getElementById('res-dock').innerText="¥"+df.toLocaleString();document.getElementById('res-stay-dock').innerText="¥"+sdf.toLocaleString();document.getElementById('res-supplies').innerText="¥"+sc.toLocaleString();document.getElementById('res-total').innerText="¥"+tc.toLocaleString();document.getElementById('res-per-person').innerText="¥"+pp.toLocaleString();}
+const inputs=['passengers','distance','fuel_price','dock_fee','stay_dock_fee','bait_fee','ice_fee'];
+inputs.forEach(id=>{document.getElementById(id).addEventListener('input',calculateCost);});
+window.onload=function(){updatePaxButtonUi(3);calculateCost();};
+</script>
+</body>
+</html>
