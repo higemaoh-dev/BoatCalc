@@ -208,7 +208,7 @@
             color: var(--text-sub);
         }
 
-        /* グリッドレイアウト（詳細コスト用） */
+        /* グリッドレイアウト */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -356,7 +356,7 @@
                 </div>
             </div>
 
-            <!-- その他経費入力（2カラム） -->
+            <!-- その他経費入力（2カラム：施設利用料・旅先係留代） -->
             <div class="grid-2">
                 <div class="input-group">
                     <label for="facilityFee">施設利用料</label>
@@ -374,11 +374,21 @@
                 </div>
             </div>
 
-            <div class="input-group">
-                <label for="baitIceFee">エサ代・氷代</label>
-                <div class="input-with-unit">
-                    <input type="number" id="baitIceFee" value="0" step="100" min="0" inputmode="numeric">
-                    <span class="unit">円</span>
+            <!-- その他経費入力（2カラム：エサ代・氷代） -->
+            <div class="grid-2">
+                <div class="input-group">
+                    <label for="baitFee">エサ代</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="baitFee" value="0" step="100" min="0" inputmode="numeric">
+                        <span class="unit">円</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="iceFee">氷代</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="iceFee" value="0" step="100" min="0" inputmode="numeric">
+                        <span class="unit">円</span>
+                    </div>
                 </div>
             </div>
 
@@ -412,13 +422,13 @@
     </div>
 
     <script>
-        // DOM要素の取得
         const passengersInput = document.getElementById('passengers');
         const distanceInput = document.getElementById('distance');
         const fuelPriceInput = document.getElementById('fuelPrice');
         const facilityFeeInput = document.getElementById('facilityFee');
         const mooringFeeInput = document.getElementById('mooringFee');
-        const baitIceFeeInput = document.getElementById('baitIceFee');
+        const baitFeeInput = document.getElementById('baitFee');
+        const iceFeeInput = document.getElementById('iceFee');
 
         const resPerPerson = document.getElementById('resPerPerson');
         const resFuelCost = document.getElementById('resFuelCost');
@@ -428,53 +438,42 @@
         const pButtons = document.querySelectorAll('#p-buttons .q-btn');
         const destButtons = document.querySelectorAll('.dest-btn');
 
-        // 数値化・バリデーション用ヘルパー
         function getVal(element) {
             const val = parseFloat(element.value);
             return isNaN(val) ? 0 : val;
         }
 
-        // 金額フォーマット
         function formatYen(num) {
             return num.toLocaleString() + ' 円';
         }
 
-        // メイン計算ロジック
-        function calculate() {
+        function calculateCost() {
             const passengers = Math.max(1, Math.min(6, getVal(passengersInput)));
             const distance = getVal(distanceInput);
             const fuelPrice = getVal(fuelPriceInput);
             const facilityFee = getVal(facilityFeeInput);
             const mooringFee = getVal(mooringFeeInput);
-            const baitIceFee = getVal(baitIceFeeInput);
+            const baitFee = getVal(baitFeeInput);
+            const iceFee = getVal(iceFeeInput);
 
-            // 燃費係数（L/nm）の算出モデル
-            let fuelEfficiency = 1.15; // 2名乗船時をベース値
+            // 燃費係数（L/nm）算出モデル
+            let fuelEfficiency = 1.15; 
             if (passengers === 1) {
-                fuelEfficiency = 1.0875; // 1.15 - 0.0625
+                fuelEfficiency = 1.0875; 
             } else if (passengers >= 3) {
                 fuelEfficiency = 1.15 + (passengers - 2) * 0.0625;
             }
 
-            // 燃料代(円) = 航行距離(nm) × 燃費係数 × 燃料単価(円/L) （四捨五入）
             const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
-
-            // その他の経費合計
-            const otherCost = facilityFee + mooringFee + baitIceFee;
-
-            // 総経費
+            const otherCost = facilityFee + mooringFee + baitFee + iceFee;
             const totalCost = fuelCost + otherCost;
-
-            // 1人あたり徴収額（Math.ceilで1円単位繰り上げ）
             const perPerson = Math.ceil(totalCost / passengers);
 
-            // 結果の反映
             resPerPerson.innerHTML = `${perPerson.toLocaleString()}<span> 円</span>`;
             resFuelCost.textContent = formatYen(fuelCost);
             resOtherCost.textContent = formatYen(otherCost);
             resTotalCost.textContent = formatYen(totalCost);
 
-            // 乗船人数ボタンのアクティブ状態更新
             pButtons.forEach(btn => {
                 if (parseInt(btn.dataset.val) === passengers) {
                     btn.classList.add('active');
@@ -484,30 +483,27 @@
             });
         }
 
-        // イベントリスナーの設定
-        const inputs = [passengersInput, distanceInput, fuelPriceInput, facilityFeeInput, mooringFeeInput, baitIceFeeInput];
-        inputs.forEach(input => {
-            input.addEventListener('input', calculate);
+        const costInputs = [passengersInput, distanceInput, fuelPriceInput, facilityFeeInput, mooringFeeInput, baitFeeInput, iceFeeInput];
+        costInputs.forEach(input => {
+            input.addEventListener('input', calculateCost);
         });
 
-        // 人数クイックボタン
         pButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 passengersInput.value = btn.dataset.val;
-                calculate();
+                calculateCost();
             });
         });
 
-        // 目的地ボタン
         destButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 distanceInput.value = btn.dataset.dist;
-                calculate();
+                calculateCost();
             });
         });
 
-        // 初期実行
-        calculate();
+        // 初期計算実行
+        calculateCost();
     </script>
 </body>
 </html>
