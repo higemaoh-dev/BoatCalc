@@ -588,4 +588,110 @@
             } else if (passengers >= 3) {
                 fuelEfficiency = 1.15 + (passengers - 2) * 0.0625;
             }
+const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
+            const otherCost = facilityFee + mooringFee + baitFee + iceFee;
+            const totalCost = fuelCost + otherCost;
+            const perPerson = Math.ceil(totalCost / passengers);
+
+            resFuelCost.textContent = formatYen(fuelCost);
+            resOtherCost.textContent = formatYen(otherCost);
+            resTotalCost.textContent = formatYen(totalCost);
+            resPerPerson.innerHTML = perPerson.toLocaleString() + '<span> 円</span>';
+        }
+
+        // 人数ボタンのイベント設定
+        pButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                pButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                passengersInput.value = btn.dataset.val;
+                calculateCost();
+            });
+        });
+
+        // 目的地ボタンのイベント設定
+        destButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                distanceInput.value = btn.dataset.dist;
+                calculateCost();
+            });
+        });
+
+        // 入力値変更時のイベント設定
+        [passengersInput, distanceInput, fuelPriceInput, facilityFeeInput, mooringFeeInput, baitFeeInput, iceFeeInput].forEach(input => {
+            input.addEventListener('input', () => {
+                if (input === passengersInput) {
+                    const pVal = passengersInput.value;
+                    pButtons.forEach(btn => {
+                        if (btn.dataset.val === pVal) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+                }
+                calculateCost();
+            });
+        });
+
+        // --- 2. 出港判断処理 ---
+        const tideInput = document.getElementById('tideVal');
+        const waveInput = document.getElementById('waveVal');
+        const windInput = document.getElementById('windVal');
+
+        const safetyCard = document.getElementById('safetyCard');
+        const safetyStatusText = document.getElementById('safetyStatusText');
+        const sTideDesc = document.getElementById('sTideDesc');
+        const sWaveDesc = document.getElementById('sWaveDesc');
+        const sWindDesc = document.getElementById('sWindDesc');
+
+        function checkSafety() {
+            const tide = getVal(tideInput);
+            const wave = getVal(waveInput);
+            const wind = getVal(windInput);
+
+            let tideStatus = 'go';
+            let tideText = `◯ 安全 (${tide}cm)`;
+            if (tide < 50) {
+                tideStatus = 'nogo';
+                tideText = `× 浅すぎ危険 (${tide}cm)`;
+            } else if (tide < 65) {
+                tideStatus = 'caution';
+                tideText = `△ 注意 (${tide}cm)`;
+            }
+
+            let waveStatus = wave <= 80 ? 'go' : 'nogo';
+            let waveText = wave <= 80 ? `◯ クリア (${wave}cm)` : `× 高波危険 (${wave}cm)`;
+
+            let windStatus = wind <= 8.0 ? 'go' : 'nogo';
+            let windText = wind <= 8.0 ? `◯ クリア (${wind.toFixed(1)}m/s)` : `× 強風危険 (${wind.toFixed(1)}m/s)`;
+
+            sTideDesc.textContent = tideText;
+            sWaveDesc.textContent = waveText;
+            sWindDesc.textContent = windText;
+
+            safetyCard.classList.remove('bg-go-card', 'bg-caution-card', 'bg-nogo-card');
+
+            if (tideStatus === 'nogo' || waveStatus === 'nogo' || windStatus === 'nogo') {
+                safetyCard.classList.add('bg-nogo-card');
+                safetyStatusText.textContent = '× 出港不可 (No Go)';
+            } else if (tideStatus === 'caution') {
+                safetyCard.classList.add('bg-caution-card');
+                safetyStatusText.textContent = '△ 注意出港 (Caution)';
+            } else {
+                safetyCard.classList.add('bg-go-card');
+                safetyStatusText.textContent = '◯ 出港可能 (Go)';
+            }
+        }
+
+        [tideInput, waveInput, windInput].forEach(input => {
+            input.addEventListener('input', checkSafety);
+        });
+
+        // 初期計算実行
+        calculateCost();
+        checkSafety();
+    </script>
+</body>
+</html>
        
