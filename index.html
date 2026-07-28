@@ -15,9 +15,6 @@
             --text-sub: #7f8c8d;
             --border: #dcdde1;
             --radius: 12px;
-            --go: #16a34a;
-            --caution: #ca8a04;
-            --nogo: #dc2626;
         }
 
         * {
@@ -48,7 +45,6 @@
             flex-direction: column;
         }
 
-        /* ヘッダー */
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
@@ -96,7 +92,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* タブコンテンツパネル */
+        /* タブコンテンツ */
         .tab-content {
             display: none;
             padding: 20px;
@@ -129,7 +125,6 @@
             border-radius: 2px;
         }
 
-        /* グループ化 */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -175,7 +170,6 @@
             pointer-events: none;
         }
 
-        /* クイックボタン群 */
         .quick-buttons {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -206,7 +200,6 @@
             border-color: var(--primary);
         }
 
-        /* 目的地ボタン */
         .dest-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -249,7 +242,7 @@
             gap: 12px;
         }
 
-        /* 費用結果表示カード */
+        /* 費用結果カード */
         .result-card {
             background: linear-gradient(135deg, #0b2f61, #164e96);
             color: white;
@@ -305,11 +298,7 @@
             margin-top: 2px;
         }
 
-        .result-row span:last-child {
-            font-weight: 600;
-        }
-
-        /* 出港判断の結果カード */
+        /* 出港判断カード */
         .safety-result-card {
             border-radius: var(--radius);
             padding: 20px;
@@ -323,10 +312,9 @@
         .bg-go-card { background: linear-gradient(135deg, #15803d, #22c55e); }
         .bg-caution-card { background: linear-gradient(135deg, #a16207, #eab308); }
         .bg-nogo-card { background: linear-gradient(135deg, #b91c1c, #ef4444); }
-        .bg-unknown-card { background: linear-gradient(135deg, #475569, #64748b); }
 
         .safety-status-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: 0.05em;
         }
@@ -347,7 +335,7 @@
             justify-content: space-between;
         }
 
-        /* 釣果情報のスタイル */
+        /* 釣果カード */
         .fishing-card {
             background: #ffffff;
             border: 1px solid var(--border);
@@ -369,7 +357,6 @@
             line-height: 1.4;
         }
 
-        /* フッタークレジット */
         footer {
             text-align: center;
             padding: 12px;
@@ -390,9 +377,9 @@
 
         <!-- タブメニュー -->
         <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('calc')">💰 費用計算</button>
-            <button class="tab-btn" onclick="switchTab('safety')">⚓ 出港判断</button>
-            <button class="tab-btn" onclick="switchTab('fishing')">🎣 釣果情報</button>
+            <button class="tab-btn active" id="btn-tab-calc" onclick="switchTab('calc')">💰 費用計算</button>
+            <button class="tab-btn" id="btn-tab-safety" onclick="switchTab('safety')">⚓ 出港判断</button>
+            <button class="tab-btn" id="btn-tab-fishing" onclick="switchTab('fishing')">🎣 釣果情報</button>
         </div>
 
         <!-- タブ1: 費用計算 (boatcalc) -->
@@ -516,7 +503,7 @@
             <div id="safetyCard" class="safety-result-card bg-go-card">
                 <div class="result-header-label">安全出港判断結果</div>
                 <div class="safety-status-title" id="safetyStatusText">◯ 出港可能 (Go)</div>
-                <div class="safety-details" id="safetyDetailsBox">
+                <div class="safety-details">
                     <div class="safety-row"><span>潮位判定:</span><span id="sTideDesc">◯ 安全 (68cm)</span></div>
                     <div class="safety-row"><span>波高判定:</span><span id="sWaveDesc">◯ クリア (50cm)</span></div>
                     <div class="safety-row"><span>風速判定:</span><span id="sWindDesc">◯ クリア (4.0m/s)</span></div>
@@ -550,16 +537,26 @@
     </div>
 
     <script>
-        // タブ切り替えロジック
+        // タブ切り替え関数
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
             document.getElementById('tab-' + tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById('btn-tab-' + tabName).classList.add('active');
         }
 
-        // --- 1. 費用計算ロジック ---
+        // 共通数値取得
+        function getVal(element) {
+            const val = parseFloat(element.value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function formatYen(num) {
+            return num.toLocaleString() + ' 円';
+        }
+
+        // --- 1. 費用計算処理 ---
         const passengersInput = document.getElementById('passengers');
         const distanceInput = document.getElementById('distance');
         const fuelPriceInput = document.getElementById('fuelPrice');
@@ -576,15 +573,6 @@
         const pButtons = document.querySelectorAll('#p-buttons .q-btn');
         const destButtons = document.querySelectorAll('.dest-btn');
 
-        function getVal(element) {
-            const val = parseFloat(element.value);
-            return isNaN(val) ? 0 : val;
-        }
-
-        function formatYen(num) {
-            return num.toLocaleString() + ' 円';
-        }
-
         function calculateCost() {
             const passengers = Math.max(1, Math.min(6, getVal(passengersInput)));
             const distance = getVal(distanceInput);
@@ -592,4 +580,13 @@
             const facilityFee = getVal(facilityFeeInput);
             const mooringFee = getVal(mooringFeeInput);
             const baitFee = getVal(baitFeeInput);
-    
+            const iceFee = getVal(iceFeeInput);
+
+            let fuelEfficiency = 1.15; 
+            if (passengers === 1) {
+                fuelEfficiency = 1.0875; 
+            } else if (passengers >= 3) {
+                fuelEfficiency = 1.15 + (passengers - 2) * 0.0625;
+            }
+
+      
