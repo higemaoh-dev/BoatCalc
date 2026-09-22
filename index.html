@@ -27,7 +27,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            padding: 16px;
+            padding: 12px;
             min-height: 100vh;
         }
 
@@ -46,7 +46,7 @@
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
-            padding: 20px;
+            padding: 16px 20px;
             text-align: center;
         }
 
@@ -64,30 +64,9 @@
 
         .calculator-content {
             display: flex;
-            padding: 20px;
+            padding: 16px;
             flex-direction: column;
-            gap: 20px;
-        }
-
-        .section-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .section-title::before {
-            content: "";
-            display: inline-block;
-            width: 4px;
-            height: 12px;
-            background-color: var(--accent);
-            border-radius: 2px;
+            gap: 16px;
         }
 
         .input-group {
@@ -138,7 +117,7 @@
         .quick-buttons {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
+            gap: 4px;
             margin-top: 4px;
         }
 
@@ -147,7 +126,7 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 8px 0;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-main);
             cursor: pointer;
@@ -176,7 +155,7 @@
             background-color: #f0f4f8;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 10px 6px;
+            padding: 8px 4px;
             text-align: center;
             cursor: pointer;
             transition: all 0.15s;
@@ -204,7 +183,7 @@
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         /* 費用結果カード */
@@ -212,7 +191,7 @@
             background: linear-gradient(135deg, #0b2f61, #164e96);
             color: white;
             border-radius: var(--radius);
-            padding: 20px;
+            padding: 16px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -228,24 +207,24 @@
         }
 
         .per-person-amount {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             letter-spacing: -0.02em;
             color: #ffffff;
         }
 
         .per-person-amount span {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: normal;
         }
 
         .result-details {
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding-top: 12px;
+            padding-top: 10px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 6px;
+            font-size: 0.8rem;
             text-align: left;
         }
 
@@ -257,12 +236,11 @@
 
         .result-row.subtotal {
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             border-top: 1px dashed rgba(255, 255, 255, 0.2);
             padding-top: 6px;
             margin-top: 2px;
         }
-
     </style>
 </head>
 <body>
@@ -359,14 +337,10 @@
                     <div class="result-row subtotal"><span>総経費合計</span><span id="resTotalCost">0 円</span></div>
                 </div>
             </div>
-        </div>
-
         </main>
-
     </div>
 
     <script>
-        // 共通数値取得
         function getVal(element) {
             const val = parseFloat(element.value);
             return isNaN(val) ? 0 : val;
@@ -376,7 +350,6 @@
             return num.toLocaleString() + ' 円';
         }
 
-        // --- 1. 費用計算処理 ---
         const passengersInput = document.getElementById('passengers');
         const distanceInput = document.getElementById('distance');
         const fuelPriceInput = document.getElementById('fuelPrice');
@@ -408,7 +381,7 @@
             } else if (passengers >= 3) {
                 fuelEfficiency = 1.15 + (passengers - 2) * 0.0625;
             }
-const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
+            const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
             const otherCost = facilityFee + mooringFee + baitFee + iceFee;
             const totalCost = fuelCost + otherCost;
             const perPerson = Math.ceil(totalCost / passengers);
@@ -419,7 +392,6 @@ const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
             resPerPerson.innerHTML = perPerson.toLocaleString() + '<span> 円</span>';
         }
 
-        // 人数ボタンのイベント設定
         pButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 pButtons.forEach(b => b.classList.remove('active'));
@@ -429,7 +401,6 @@ const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
             });
         });
 
-        // 目的地ボタンのイベント設定
         destButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 distanceInput.value = btn.dataset.dist;
@@ -437,7 +408,6 @@ const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
             });
         });
 
-        // 入力値変更時のイベント設定
         [passengersInput, distanceInput, fuelPriceInput, facilityFeeInput, mooringFeeInput, baitFeeInput, iceFeeInput].forEach(input => {
             input.addEventListener('input', () => {
                 if (input === passengersInput) {
@@ -454,9 +424,7 @@ const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
             });
         });
 
-        // 初期計算実行
         calculateCost();
     </script>
 </body>
 </html>
-       
