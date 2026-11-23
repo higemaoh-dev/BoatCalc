@@ -332,6 +332,7 @@
                     <div class="per-person-amount" id="resPerPerson">0<span> 円</span></div>
                 </div>
                 <div class="result-details">
+                    <div class="result-row"><span>燃料使用量（推定）</span><span id="resFuelAmount">0.0 L</span></div>
                     <div class="result-row"><span>燃料代</span><span id="resFuelCost">0 円</span></div>
                     <div class="result-row"><span>施設・係留・消耗品費</span><span id="resOtherCost">0 円</span></div>
                     <div class="result-row subtotal"><span>総経費合計</span><span id="resTotalCost">0 円</span></div>
@@ -359,6 +360,7 @@
         const iceFeeInput = document.getElementById('iceFee');
 
         const resPerPerson = document.getElementById('resPerPerson');
+        const resFuelAmount = document.getElementById('resFuelAmount');
         const resFuelCost = document.getElementById('resFuelCost');
         const resOtherCost = document.getElementById('resOtherCost');
         const resTotalCost = document.getElementById('resTotalCost');
@@ -381,11 +383,13 @@
             } else if (passengers >= 3) {
                 fuelEfficiency = 1.15 + (passengers - 2) * 0.0625;
             }
-            const fuelCost = Math.round(distance * fuelEfficiency * fuelPrice);
+            const fuelAmount = distance * fuelEfficiency;
+            const fuelCost = Math.round(fuelAmount * fuelPrice);
             const otherCost = facilityFee + mooringFee + baitFee + iceFee;
             const totalCost = fuelCost + otherCost;
             const perPerson = Math.ceil(totalCost / passengers);
 
+            resFuelAmount.textContent = fuelAmount.toFixed(1) + ' L';
             resFuelCost.textContent = formatYen(fuelCost);
             resOtherCost.textContent = formatYen(otherCost);
             resTotalCost.textContent = formatYen(totalCost);
